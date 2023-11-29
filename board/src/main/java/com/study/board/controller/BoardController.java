@@ -1,12 +1,18 @@
 package com.study.board.controller;
 
 import com.study.board.entity.Board;
+import com.study.board.service.BoardService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class BoardController {
+
+    @Autowired
+    private BoardService boardService;
 
     @GetMapping("/board/write") //localhost:8888/board/write
     public String boardWriteForm() {
@@ -15,12 +21,53 @@ public class BoardController {
     }
 
     @PostMapping("/board/writepro")
-    public String boardWritePro(String title, String content) {
+//    public String boardWritePro(@RequestParam(name = "title") String title, @RequestParam(name = "content") String content) {
+    public String boardWritePro(Board board) {
 
-        System.out.println("제목 : " + title);
-        System.out.println("내용 : " + content);
+        boardService.write(board);
 
-        return "";
+        return "redirect:/board/list";
+    }
+
+    @GetMapping("/board/list")
+    public String boardList(Model model) {
+
+        model.addAttribute("list", boardService.boardList());
+
+        return "boardlist";
+    }
+
+    @GetMapping("/board/view") //localhost: 8888/board/view?id=1
+    public String boardView(Model model, HttpServletRequest req) {
+        Integer boardId = Integer.parseInt(req.getParameter("id"));
+        model.addAttribute("board", boardService.boardView(boardId));
+
+        return "boardview";
+    }
+
+    @GetMapping("/board/delete")
+    public String boardDelete(HttpServletRequest req) {
+        Integer boardId = Integer.parseInt(req.getParameter("id"));
+        boardService.boardDelete(boardId);
+
+        return "redirect:/board/list";
+    }
+
+    @GetMapping("/board/modify/{id}")
+    public String boardModify(@PathVariable("id") Integer id, Model model) {
+
+        model.addAttribute("board", boardService.boardView(id));
+
+        return "boardmodify";
+    }
+
+    @PostMapping("/board/update/{id}")
+    public String boardUpdate(@PathVariable("id") Integer id, Board board) {
+
+        Board boardTemp = boardService.boardView(id);
+        boardTemp.setTitle(board.getTitle());
+        boardTemp.setContent(board.getContent());
+
+        return "redirect:/board/list";
     }
 }
-
